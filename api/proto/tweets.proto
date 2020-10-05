@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/timestamp.proto";
+
+service TweetsService {
+    rpc PostsGetList (PostsGetListRequest) returns (PostsGetListResponse) {}
+    rpc PostsGetById (PostsGetByIdRequest) returns (PostsGetByIdResponse) {}
+}
+
+// Procedures
+message PostsGetListRequest {}
+
+message PostsGetListResponse {
+    repeated Post posts = 1;
+}
+
+message PostsGetByIdRequest {
+    uint64 id = 1;
+}
+
+message PostsGetByIdResponse {
+    Post post = 1;
+}
+
+// Models
+message Post {
+    uint64 id = 1;
+    uint64 author_id = 2;
+    string content = 3;
+    google.protobuf.Timestamp created_at = 4;
+}
