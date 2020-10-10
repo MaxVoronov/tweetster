@@ -8,12 +8,12 @@ import (
 
 type Endpoints struct {
 	PostsGetListEndpoint endpoint.Endpoint
-	PostsGetByIdEndpoint endpoint.Endpoint
+	PostsGetByIDEndpoint endpoint.Endpoint
 }
 
 func PrepareServiceEndpoints(svc services.TweetsService) Endpoints {
 	return Endpoints{
 		PostsGetListEndpoint: makePostsGetListEndpoint(svc),
-		PostsGetByIdEndpoint: makePostsGetByIdEndpoint(svc),
+		PostsGetByIDEndpoint: makePostsGetByIDEndpoint(svc),
 	}
 }

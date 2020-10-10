@@ -24,22 +24,22 @@ func makePostsGetListEndpoint(svc services.TweetsService) endpoint.Endpoint {
 }
 
 // Posts: Get by ID
-type PostsGetByIdRequest struct {
-	Id uint64
+type PostsGetByIDRequest struct {
+	ID uint64
 }
 
-type PostsGetByIdResponse struct {
+type PostsGetByIDResponse struct {
 	Post *models.Post
 }
 
-func makePostsGetByIdEndpoint(svc services.TweetsService) endpoint.Endpoint {
+func makePostsGetByIDEndpoint(svc services.TweetsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		id := request.(*PostsGetByIdRequest).Id
-		post, err := svc.PostsGetById(ctx, id)
+		id := request.(*PostsGetByIDRequest).ID
+		post, err := svc.PostsGetByID(ctx, id)
 		if err != nil {
 			return nil, err
 		}
 
-		return &PostsGetByIdResponse{Post: post}, nil
+		return &PostsGetByIDResponse{Post: post}, nil
 	}
 }

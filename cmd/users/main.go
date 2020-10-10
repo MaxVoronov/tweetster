@@ -12,12 +12,12 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/maxvoronov/tweetster/internal/pb"
-	"github.com/maxvoronov/tweetster/internal/tweets/endpoints"
-	"github.com/maxvoronov/tweetster/internal/tweets/services"
-	"github.com/maxvoronov/tweetster/internal/tweets/transports"
+	"github.com/maxvoronov/tweetster/internal/users/endpoints"
+	"github.com/maxvoronov/tweetster/internal/users/services"
+	"github.com/maxvoronov/tweetster/internal/users/transports"
 )
 
-const gRPCAddr = "127.0.0.1:8081"
+const gRPCAddr = "127.0.0.1:8082"
 
 func main() {
 	var logger log.Logger
@@ -25,10 +25,10 @@ func main() {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	level.Info(logger).Log("msg", "Tweets service started")
-	defer level.Info(logger).Log("msg", "Tweets service ended")
+	level.Info(logger).Log("msg", "Users service started")
+	defer level.Info(logger).Log("msg", "Users service ended")
 
-	svc := services.NewTweetsService()
+	svc := services.NewUsersService()
 	svc = services.LoggingMiddleware(logger)(svc)
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)
@@ -49,7 +49,7 @@ func main() {
 	go func() {
 		level.Info(logger).Log("transport", "gRPC", "addr", gRPCAddr)
 		baseServer := grpc.NewServer()
-		pb.RegisterTweetsServiceServer(baseServer, gRPCServer)
+		pb.RegisterUsersServiceServer(baseServer, gRPCServer)
 		baseServer.Serve(gRPCListener)
 	}()
 

@@ -5,8 +5,6 @@ help: Makefile
 
 ## lint: Check source code by linters
 lint:
-	@echo "Checking go vet..." && go vet ./... && echo "Done!\n"
-	@echo "Checking golint..." && golint ./... && echo "Done!\n"
 	@echo "Checking golangci-lint..." && golangci-lint run ./... && echo "Done!"
 
 ## proto-gen: Generate protobuf files for all services
@@ -15,12 +13,12 @@ proto-gen: proto-clean
 	@find $(CURDIR)/api/proto/ -name '*.proto' -exec \
 		protoc \
 			--proto_path=$(CURDIR)/api/proto/ \
-			--go_out=plugins=grpc:$(CURDIR)/internal/tweets/pb \
+			--go_out=plugins=grpc:$(CURDIR)/internal/pb \
 			{} \;
 	@echo "Done"
 
 ## proto-clean: Remove generated protobuf files
 proto-clean:
 	@printf "Cleaning protobuf files... "
-	@rm -rf $(CURDIR)/internal/tweets/pb/*
+	@rm -rf $(CURDIR)/internal/pb/*
 	@echo "Done"

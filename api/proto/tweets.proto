@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 
 service TweetsService {
     rpc PostsGetList (PostsGetListRequest) returns (PostsGetListResponse) {}
-    rpc PostsGetById (PostsGetByIdRequest) returns (PostsGetByIdResponse) {}
+    rpc PostsGetByID (PostsGetByIDRequest) returns (PostsGetByIDResponse) {}
 }
 
 // Procedures
@@ -16,11 +16,11 @@ message PostsGetListResponse {
     repeated Post posts = 1;
 }
 
-message PostsGetByIdRequest {
+message PostsGetByIDRequest {
     uint64 id = 1;
 }
 
-message PostsGetByIdResponse {
+message PostsGetByIDResponse {
     Post post = 1;
 }
 

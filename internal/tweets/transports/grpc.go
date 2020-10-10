@@ -6,13 +6,13 @@ import (
 	transport "github.com/go-kit/kit/transport/grpc"
 	"github.com/golang/protobuf/ptypes"
 
+	"github.com/maxvoronov/tweetster/internal/pb"
 	"github.com/maxvoronov/tweetster/internal/tweets/endpoints"
-	"github.com/maxvoronov/tweetster/internal/tweets/pb"
 )
 
 type grpcServer struct {
 	postsGetList transport.Handler
-	postsGetById transport.Handler
+	postsGetByID transport.Handler
 }
 
 func NewGRPCServer(tweetsEndpoints endpoints.Endpoints) pb.TweetsServiceServer {
@@ -22,10 +22,10 @@ func NewGRPCServer(tweetsEndpoints endpoints.Endpoints) pb.TweetsServiceServer {
 			postsGetListDecode,
 			postsGetListEncode,
 		),
-		postsGetById: transport.NewServer(
-			tweetsEndpoints.PostsGetByIdEndpoint,
-			postsGetByIdDecode,
-			postsGetByIdEncode,
+		postsGetByID: transport.NewServer(
+			tweetsEndpoints.PostsGetByIDEndpoint,
+			postsGetByIDDecode,
+			postsGetByIDEncode,
 		),
 	}
 }
@@ -38,12 +38,12 @@ func (g grpcServer) PostsGetList(ctx context.Context, request *pb.PostsGetListRe
 	return response.(*pb.PostsGetListResponse), nil
 }
 
-func (g grpcServer) PostsGetById(ctx context.Context, request *pb.PostsGetByIdRequest) (*pb.PostsGetByIdResponse, error) {
-	_, response, err := g.postsGetById.ServeGRPC(ctx, request)
+func (g grpcServer) PostsGetByID(ctx context.Context, request *pb.PostsGetByIDRequest) (*pb.PostsGetByIDResponse, error) {
+	_, response, err := g.postsGetByID.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*pb.PostsGetByIdResponse), nil
+	return response.(*pb.PostsGetByIDResponse), nil
 }
 
 func postsGetListDecode(_ context.Context, _ interface{}) (interface{}, error) {
@@ -59,8 +59,8 @@ func postsGetListEncode(_ context.Context, response interface{}) (interface{}, e
 			return nil, err
 		}
 		posts = append(posts, &pb.Post{
-			Id:        post.Id,
-			AuthorId:  post.AuthorId,
+			Id:        post.ID,
+			AuthorId:  post.AuthorID,
 			Content:   post.Content,
 			CreatedAt: createdAt,
 		})
@@ -69,22 +69,22 @@ func postsGetListEncode(_ context.Context, response interface{}) (interface{}, e
 	return &pb.PostsGetListResponse{Posts: posts}, nil
 }
 
-func postsGetByIdDecode(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.PostsGetByIdRequest)
-	return &endpoints.PostsGetByIdRequest{Id: req.Id}, nil
+func postsGetByIDDecode(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.PostsGetByIDRequest)
+	return &endpoints.PostsGetByIDRequest{ID: req.Id}, nil
 }
 
-func postsGetByIdEncode(_ context.Context, response interface{}) (interface{}, error) {
-	res := response.(*endpoints.PostsGetByIdResponse)
+func postsGetByIDEncode(_ context.Context, response interface{}) (interface{}, error) {
+	res := response.(*endpoints.PostsGetByIDResponse)
 	createdAt, err := ptypes.TimestampProto(res.Post.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.PostsGetByIdResponse{
+	return &pb.PostsGetByIDResponse{
 		Post: &pb.Post{
-			Id:        res.Post.Id,
-			AuthorId:  res.Post.AuthorId,
+			Id:        res.Post.ID,
+			AuthorId:  res.Post.AuthorID,
 			Content:   res.Post.Content,
 			CreatedAt: createdAt,
 		},

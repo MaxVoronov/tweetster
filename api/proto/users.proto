@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package pb;
+
+service UsersService {
+    rpc UserGetByID (UserGetByIDRequest) returns (UserGetByIDResponse) {}
+}
+
+// Procedures
+message UserGetByIDRequest {
+    uint64 id = 1;
+}
+
+message UserGetByIDResponse {
+    User user = 1;
+}
+
+// Models
+message User {
+    uint64 id = 1;
+    string login = 2;
+    string email = 3;
+    string name = 4;
+}
