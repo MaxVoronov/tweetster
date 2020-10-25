@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/go-kit/kit/log"
@@ -15,9 +16,12 @@ import (
 	"github.com/maxvoronov/tweetster/internal/users/endpoints"
 	"github.com/maxvoronov/tweetster/internal/users/services"
 	"github.com/maxvoronov/tweetster/internal/users/transports"
+	"github.com/maxvoronov/tweetster/pkg/sd/consul"
 )
 
-const gRPCAddr = "127.0.0.1:8082"
+const gRPCAddr = "127.0.0.1"
+const gRPCPort = 8803
+const serviceName = "users-service"
 
 func main() {
 	var logger log.Logger
@@ -33,9 +37,16 @@ func main() {
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)
 
-	gRPCListener, err := net.Listen("tcp", gRPCAddr)
+	serverAddr := net.JoinHostPort(gRPCAddr, strconv.Itoa(gRPCPort))
+	gRPCListener, err := net.Listen("tcp", serverAddr)
 	if err != nil {
 		level.Error(logger).Log("transport", "gRPC", "during", "Listen", "err", err)
+		os.Exit(1)
+	}
+
+	sdRegistrar, err := consul.NewServiceRegistrar("127.0.0.1", 8500)
+	if err != nil {
+		level.Error(logger).Log("during", "init service discovery registrar", "err", err)
 		os.Exit(1)
 	}
 
@@ -47,11 +58,20 @@ func main() {
 	}()
 
 	go func() {
-		level.Info(logger).Log("transport", "gRPC", "addr", gRPCAddr)
+		level.Info(logger).Log("transport", "gRPC", "addr", serverAddr)
 		baseServer := grpc.NewServer()
 		pb.RegisterUsersServiceServer(baseServer, gRPCServer)
 		baseServer.Serve(gRPCListener)
 	}()
 
+	serviceID, err := sdRegistrar.Register(serviceName, gRPCAddr, gRPCPort)
+	if err != nil {
+		level.Error(logger).Log("during", "service discovery register", "err", err)
+		return
+	}
+
 	level.Error(logger).Log("exit", <-errs)
+	if err := sdRegistrar.Deregister(serviceID); err != nil {
+		level.Error(logger).Log("during", "service discovery deregister", "err", err)
+	}
 }

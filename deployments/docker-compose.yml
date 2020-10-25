@@ -1,0 +1,28 @@
+version: "3"
+services:
+#  tweets-service:
+#    build:
+#      context: ..
+#      dockerfile: deployments/images/tweets/Dockerfile
+#    container_name: "tweets-service"
+#    ports:
+#      - "8801:8801"
+#    depends_on:
+#      - service-discovery
+#      - users-service
+#
+#  users-service:
+#    build:
+#      context: ..
+#      dockerfile: deployments/images/users/Dockerfile
+#    container_name: "users-service"
+#    ports:
+#      - "8802:8802"
+#    depends_on:
+#      - service-discovery
+
+  service-discovery:
+    image: library/consul:1.8
+    container_name: "service-discovery"
+    ports:
+      - "8500:8500"

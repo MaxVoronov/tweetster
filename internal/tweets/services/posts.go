@@ -2,15 +2,27 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
+	"github.com/bombsimon/logrusr"
+	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/maxvoronov/tweetster/internal/pb"
 	"github.com/maxvoronov/tweetster/internal/tweets/models"
+	"github.com/maxvoronov/tweetster/pkg/sd/consul"
+)
+
+const (
+	consulHost        = "127.0.0.1"
+	consulPort        = 8500
+	GRPCServiceConfig = `{"loadBalancingPolicy":"round_robin"}`
 )
 
 var ErrPostNotFound = status.Error(codes.NotFound, "Post not found")
@@ -35,9 +47,28 @@ func NewTweetsService() TweetsService {
 		CreatedAt: time.Now(),
 	})
 
-	conn, err := grpc.Dial("127.0.0.1:8082", grpc.WithInsecure())
+	logger := logrusr.NewLogger(logrus.New())
+	consul.RegisterDefaultResolver(logger)
+
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	conn, err := grpc.DialContext(
+		ctx,
+		// consul://127.0.0.1:8500/users-service
+		fmt.Sprintf("%s://%s:%d/%s", consul.Scheme, consulHost, consulPort, "users-service"),
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(
+			grpcRetry.UnaryClientInterceptor(
+				grpcRetry.WithMax(3),
+				grpcRetry.WithPerRetryTimeout(5*time.Second), // time.Millisecond
+				grpcRetry.WithBackoff(grpcRetry.BackoffLinear(1*time.Millisecond)),
+				grpcRetry.WithCodes(codes.ResourceExhausted, codes.Unavailable, codes.DeadlineExceeded),
+			),
+		),
+		grpc.WithDefaultServiceConfig(GRPCServiceConfig),
+	)
 	if err != nil {
-		log.Fatalf("Unable to connect to users service: %s", err.Error())
+		logger.Error(err, "Unable to connect to users service")
+		os.Exit(1)
 	}
 
 	return &tweetsSvc{
