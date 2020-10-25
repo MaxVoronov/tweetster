@@ -23,7 +23,10 @@ const (
 )
 
 func main() {
-	logger := logrusr.NewLogger(logrus.New())
+	jsonLogger := logrus.New()
+	jsonLogger.SetLevel(logrus.DebugLevel)
+	jsonLogger.SetFormatter(&logrus.JSONFormatter{})
+	logger := logrusr.NewLogger(jsonLogger)
 
 	consul.RegisterDefaultResolver(logger)
 

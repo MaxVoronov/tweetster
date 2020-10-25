@@ -8,12 +8,13 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/maxvoronov/tweetster/internal/pb"
 	"github.com/maxvoronov/tweetster/internal/users/endpoints"
+	"github.com/maxvoronov/tweetster/internal/users/middlewares"
 	"github.com/maxvoronov/tweetster/internal/users/services"
 	"github.com/maxvoronov/tweetster/internal/users/transports"
 	"github.com/maxvoronov/tweetster/pkg/sd/consul"
@@ -24,29 +25,26 @@ const gRPCPort = 8803
 const serviceName = "users-service"
 
 func main() {
-	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
-
-	level.Info(logger).Log("msg", "Users service started")
-	defer level.Info(logger).Log("msg", "Users service ended")
+	jsonLogger := logrus.New()
+	jsonLogger.SetLevel(logrus.DebugLevel)
+	jsonLogger.SetFormatter(&logrus.JSONFormatter{})
+	logger := logrusr.NewLogger(jsonLogger)
 
 	svc := services.NewUsersService()
-	svc = services.LoggingMiddleware(logger)(svc)
+	svc = middlewares.LoggingMiddleware(logger)(svc)
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)
 
 	serverAddr := net.JoinHostPort(gRPCAddr, strconv.Itoa(gRPCPort))
 	gRPCListener, err := net.Listen("tcp", serverAddr)
 	if err != nil {
-		level.Error(logger).Log("transport", "gRPC", "during", "Listen", "err", err)
+		logger.Error(err, "Failed to init gRPC listener", "addr", serverAddr)
 		os.Exit(1)
 	}
 
 	sdRegistrar, err := consul.NewServiceRegistrar("127.0.0.1", 8500)
 	if err != nil {
-		level.Error(logger).Log("during", "init service discovery registrar", "err", err)
+		logger.Error(err, "Failed to init service discovery registrar", "addr", serverAddr)
 		os.Exit(1)
 	}
 
@@ -58,20 +56,24 @@ func main() {
 	}()
 
 	go func() {
-		level.Info(logger).Log("transport", "gRPC", "addr", serverAddr)
 		baseServer := grpc.NewServer()
 		pb.RegisterUsersServiceServer(baseServer, gRPCServer)
-		baseServer.Serve(gRPCListener)
+		if err := baseServer.Serve(gRPCListener); err != nil {
+			logger.Error(err, "Failed to start gRPC server", "addr", serverAddr)
+		}
 	}()
 
 	serviceID, err := sdRegistrar.Register(serviceName, gRPCAddr, gRPCPort)
 	if err != nil {
-		level.Error(logger).Log("during", "service discovery register", "err", err)
-		return
+		logger.Error(err, "Failed to register service in service discovery", "serviceName", serviceName)
+		os.Exit(1)
 	}
 
-	level.Error(logger).Log("exit", <-errs)
+	logger.Info("Users service successfully started", "addr", serverAddr)
+	logger.Error(err, "Stop service by signal", "signal", <-errs)
 	if err := sdRegistrar.Deregister(serviceID); err != nil {
-		level.Error(logger).Log("during", "service discovery deregister", "err", err)
+		logger.Error(err, "Failed to deregister service in service discovery", "serviceID", serviceID)
+		os.Exit(1)
 	}
+	logger.Info("Users service successfully stopped")
 }
