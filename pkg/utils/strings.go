@@ -12,7 +12,7 @@ func RandomString(length int) string {
 	var result strings.Builder
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < length; i++ {
-		result.WriteRune(characters[rand.Intn(len(characters))])
+		result.WriteRune(characters[rand.Intn(len(characters))]) //nolint:gosec
 	}
 
 	return result.String()

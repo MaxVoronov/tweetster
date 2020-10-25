@@ -3,13 +3,13 @@ help: Makefile
 	@echo "Choose a command run:"
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 
-## format
+## format: Format and simplify all source files
 format:
 	@printf "Format source files... " && gofmt -s -w . && echo "Done!"
 
 ## lint: Check source code by linters
 lint:
-	@echo "Checking golangci-lint..." && golangci-lint run ./... && echo "Done!"
+	@printf "Checking via golangci-lint... " && golangci-lint run ./... && echo "Done!"
 
 ## proto-gen: Generate protobuf files for all services
 proto-gen: proto-clean

@@ -30,9 +30,8 @@ func main() {
 
 	consul.RegisterDefaultResolver(logger)
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	conn, err := grpc.DialContext(
-		ctx,
+		context.Background(),
 		// consul://127.0.0.1:8500/users-service
 		fmt.Sprintf("%s://%s:%d/%s", consul.Scheme, consulHost, consulPort, "users-service"),
 		grpc.WithInsecure(),

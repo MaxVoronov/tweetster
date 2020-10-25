@@ -9,11 +9,11 @@ import (
 	"github.com/maxvoronov/tweetster/pkg/utils"
 )
 
-type registrar struct {
+type Registrar struct {
 	apiClient *api.Client
 }
 
-func NewServiceRegistrar(consulHost string, consulPort int) (*registrar, error) {
+func NewServiceRegistrar(consulHost string, consulPort int) (*Registrar, error) {
 	config := api.DefaultConfig()
 	config.Address = net.JoinHostPort(consulHost, strconv.Itoa(consulPort))
 	client, err := api.NewClient(config)
@@ -21,10 +21,10 @@ func NewServiceRegistrar(consulHost string, consulPort int) (*registrar, error) 
 		return nil, err
 	}
 
-	return &registrar{apiClient: client}, nil
+	return &Registrar{apiClient: client}, nil
 }
 
-func (r *registrar) Register(name string, host string, port int) (string, error) {
+func (r *Registrar) Register(name string, host string, port int) (string, error) {
 	serviceID := name + "-" + utils.RandomString(5)
 	asr := &api.AgentServiceRegistration{
 		ID:      serviceID,
@@ -40,6 +40,6 @@ func (r *registrar) Register(name string, host string, port int) (string, error)
 	return serviceID, nil
 }
 
-func (r *registrar) Deregister(id string) error {
+func (r *Registrar) Deregister(id string) error {
 	return r.apiClient.Agent().ServiceDeregister(id)
 }
