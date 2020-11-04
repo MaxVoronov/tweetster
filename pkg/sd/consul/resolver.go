@@ -3,6 +3,7 @@ package consul
 import (
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/consul/api"
@@ -22,13 +23,18 @@ type consulBuilder struct {
 }
 
 func (cb *consulBuilder) Build(target resolver.Target, conn resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	cb.logger.Info("building consul resolver", "params", target)
+	cb.logger.Info(
+		"building consul resolver",
+		"scheme", target.Scheme,
+		"address", target.Authority,
+		"service", target.Endpoint,
+	)
 
 	config := api.DefaultConfig()
 	config.Address = target.Authority
 	apiClient, err := api.NewClient(config)
 	if err != nil {
-		cb.logger.Error(err, "error create consul client")
+		cb.logger.Error(err, "failed to create consul client")
 		return nil, err
 	}
 
@@ -73,8 +79,17 @@ func (cr *consulResolver) watcher() {
 			})
 		}
 
-		cr.logger.Info("adding service addresses", "addresses", addresses)
 		cr.clientConn.UpdateState(resolver.State{Addresses: addresses})
+
+		addrList := make([]string, 0, len(addresses))
+		for _, addr := range addresses {
+			addrList = append(addrList, addr.Addr)
+		}
+		cr.logger.Info(
+			"adding addresses of service",
+			"service", cr.serviceName,
+			"addresses", strings.Join(addrList, ", "),
+		)
 	}
 }
 

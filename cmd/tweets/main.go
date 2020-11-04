@@ -30,7 +30,7 @@ func main() {
 	jsonLogger.SetFormatter(&logrus.JSONFormatter{})
 	logger := logrusr.NewLogger(jsonLogger)
 
-	svc := services.NewTweetsService()
+	svc := services.NewTweetsService(logger)
 	svc = middlewares.LoggingMiddleware(logger)(svc)
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)

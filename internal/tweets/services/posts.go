@@ -7,9 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/bombsimon/logrusr"
+	logr "github.com/go-logr/logr"
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,11 +27,12 @@ const (
 var ErrPostNotFound = status.Error(codes.NotFound, "Post not found")
 
 type tweetsSvc struct {
+	Logger       logr.Logger
 	Storage      []*models.Post
 	UsersService pb.UsersServiceClient
 }
 
-func NewTweetsService() TweetsService {
+func NewTweetsService(logger logr.Logger) TweetsService {
 	posts := make([]*models.Post, 0, 2)
 	posts = append(posts, &models.Post{
 		ID:        1,
@@ -47,9 +47,7 @@ func NewTweetsService() TweetsService {
 		CreatedAt: time.Now(),
 	})
 
-	logger := logrusr.NewLogger(logrus.New())
 	consul.RegisterDefaultResolver(logger)
-
 	conn, err := grpc.DialContext(
 		context.Background(),
 		// consul://127.0.0.1:8500/users-service
@@ -71,6 +69,7 @@ func NewTweetsService() TweetsService {
 	}
 
 	return &tweetsSvc{
+		Logger:       logger,
 		Storage:      posts,
 		UsersService: pb.NewUsersServiceClient(conn),
 	}

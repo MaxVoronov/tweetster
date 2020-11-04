@@ -21,7 +21,7 @@ import (
 )
 
 const gRPCAddr = "127.0.0.1"
-const gRPCPort = 8803
+const gRPCPort = 8802
 const serviceName = "users-service"
 
 func main() {
