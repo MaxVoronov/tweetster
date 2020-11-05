@@ -50,7 +50,7 @@ func InitServices(cfg *config.Config, logger logr.Logger) (*Services, error) {
 func (svc *Services) prepareConnection(serviceName string) (*grpc.ClientConn, error) {
 	return grpc.DialContext(
 		context.Background(),
-		fmt.Sprintf("%s://%s:%s/%s", consul.Scheme, svc.config.ConsulHost, svc.config.ConsulPort, serviceName),
+		fmt.Sprintf("%s://%s:%d/%s", consul.Scheme, svc.config.ConsulHost, svc.config.ConsulPort, serviceName),
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
 			grpc_retry.UnaryClientInterceptor(

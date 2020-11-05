@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bombsimon/logrusr"
 	"github.com/labstack/echo/v4"
@@ -46,5 +47,5 @@ func main() {
 	router := apiV1.NewRouter(cfg, svc, logger)
 	router.ApplyRoutes(e.Group("/v1"))
 
-	e.Logger.Fatal(e.Start(net.JoinHostPort(cfg.AppHost, cfg.AppPort)))
+	e.Logger.Fatal(e.Start(net.JoinHostPort(cfg.AppHost, strconv.Itoa(cfg.AppPort))))
 }

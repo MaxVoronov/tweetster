@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/maxvoronov/tweetster/internal/pb"
+	"github.com/maxvoronov/tweetster/internal/users/config"
 	"github.com/maxvoronov/tweetster/internal/users/endpoints"
 	"github.com/maxvoronov/tweetster/internal/users/middlewares"
 	"github.com/maxvoronov/tweetster/internal/users/services"
@@ -20,8 +21,6 @@ import (
 	"github.com/maxvoronov/tweetster/pkg/sd/consul"
 )
 
-const gRPCAddr = "127.0.0.1"
-const gRPCPort = 8802
 const serviceName = "users-service"
 
 func main() {
@@ -30,19 +29,25 @@ func main() {
 	jsonLogger.SetFormatter(&logrus.JSONFormatter{})
 	logger := logrusr.NewLogger(jsonLogger)
 
+	cfg, err := config.NewConfig()
+	if err != nil {
+		logger.Error(err, "Failed to load config")
+		os.Exit(1)
+	}
+
 	svc := services.NewUsersService()
 	svc = middlewares.LoggingMiddleware(logger)(svc)
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)
 
-	serverAddr := net.JoinHostPort(gRPCAddr, strconv.Itoa(gRPCPort))
+	serverAddr := net.JoinHostPort(cfg.AppHost, strconv.Itoa(cfg.AppPort))
 	gRPCListener, err := net.Listen("tcp", serverAddr)
 	if err != nil {
 		logger.Error(err, "Failed to init gRPC listener", "addr", serverAddr)
 		os.Exit(1)
 	}
 
-	sdRegistrar, err := consul.NewServiceRegistrar("127.0.0.1", 8500)
+	sdRegistrar, err := consul.NewServiceRegistrar(cfg.ConsulHost, cfg.ConsulPort)
 	if err != nil {
 		logger.Error(err, "Failed to init service discovery registrar", "addr", serverAddr)
 		os.Exit(1)
@@ -63,7 +68,7 @@ func main() {
 		}
 	}()
 
-	serviceID, err := sdRegistrar.Register(serviceName, gRPCAddr, gRPCPort)
+	serviceID, err := sdRegistrar.Register(serviceName, cfg.AppHost, cfg.AppPort)
 	if err != nil {
 		logger.Error(err, "Failed to register service in service discovery", "serviceName", serviceName)
 		os.Exit(1)

@@ -7,10 +7,10 @@ const TestMode = "test"
 
 type Config struct {
 	AppHost    string `env:"APP_HOST" envDefault:"127.0.0.1"`
-	AppPort    string `env:"APP_PORT" envDefault:"8080"`
+	AppPort    int    `env:"APP_PORT" envDefault:"8080"`
 	AppMode    string `env:"APP_MODE" envDefault:"prod"`
 	ConsulHost string `env:"CONSUL_HOST" envDefault:"127.0.0.1"`
-	ConsulPort string `env:"CONSUL_PORT" envDefault:"8500"`
+	ConsulPort int    `env:"CONSUL_PORT" envDefault:"8500"`
 }
 
 func NewConfig() (*Config, error) {
