@@ -8,7 +8,7 @@ service UsersService {
 
 // Procedures
 message UserGetByIDRequest {
-    uint64 id = 1;
+    string id = 1;
 }
 
 message UserGetByIDResponse {
@@ -17,7 +17,7 @@ message UserGetByIDResponse {
 
 // Models
 message User {
-    uint64 id = 1;
+    string id = 1;
     string login = 2;
     string email = 3;
     string name = 4;

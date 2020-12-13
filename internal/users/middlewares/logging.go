@@ -21,7 +21,7 @@ type loggingMiddleware struct {
 	logger logr.Logger
 }
 
-func (mw loggingMiddleware) UserGetByID(ctx context.Context, id uint64) (*models.User, error) {
+func (mw loggingMiddleware) UserGetByID(ctx context.Context, id string) (*models.User, error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("Call users.UserGetByID", "id", id, "latency", time.Since(begin).Nanoseconds())
 	}(time.Now())

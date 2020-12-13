@@ -16,6 +16,7 @@ import (
 	"github.com/maxvoronov/tweetster/internal/users/config"
 	"github.com/maxvoronov/tweetster/internal/users/endpoints"
 	"github.com/maxvoronov/tweetster/internal/users/middlewares"
+	"github.com/maxvoronov/tweetster/internal/users/repositories/mongo"
 	"github.com/maxvoronov/tweetster/internal/users/services"
 	"github.com/maxvoronov/tweetster/internal/users/transports"
 	"github.com/maxvoronov/tweetster/pkg/sd/consul"
@@ -35,8 +36,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	svc := services.NewUsersService()
+	db, err := mongo.InitDatabase(
+		fmt.Sprintf("mongodb://%s:%s@%s:%d/", cfg.DatabaseUser, cfg.DatabasePass, cfg.DatabaseHost, cfg.DatabasePort),
+		cfg.DatabaseName,
+	)
+	if err != nil {
+		logger.Error(err, "failed to connect to Mongo database")
+		os.Exit(1)
+	}
+
+	userRepo := mongo.NewUserRepository(db, "users")
+	svc := services.NewUsersService(userRepo)
 	svc = middlewares.LoggingMiddleware(logger)(svc)
+
+	//user, err := svc.UserGetByID(context.Background(), "5fd55f314616f096ab4372dd")
+	//if err != nil {
+	//	logger.Error(err, "User not found")
+	//	os.Exit(1)
+	//}
+	//
+	//fmt.Printf("User: %+v\n", user)
+
 	svcEndpoints := endpoints.PrepareServiceEndpoints(svc)
 	gRPCServer := transports.NewGRPCServer(svcEndpoints)
 

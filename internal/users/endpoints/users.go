@@ -11,7 +11,7 @@ import (
 
 // Users: Get by ID
 type UsersGetByIDRequest struct {
-	ID uint64
+	ID string
 }
 
 type UsersGetByIDResponse struct {

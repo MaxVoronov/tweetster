@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	logr "github.com/go-logr/logr"
+	"github.com/go-logr/logr"
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -77,7 +77,7 @@ func NewTweetsService(logger logr.Logger) TweetsService {
 
 func (svc tweetsSvc) PostsGetList(_ context.Context) ([]*models.Post, error) {
 	// ToDo: Only for testing
-	reply, err := svc.UsersService.UserGetByID(context.Background(), &pb.UserGetByIDRequest{Id: 1})
+	reply, err := svc.UsersService.UserGetByID(context.Background(), &pb.UserGetByIDRequest{Id: "1"})
 	if err != nil {
 		return nil, err
 	}
